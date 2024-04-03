@@ -648,6 +648,7 @@ class TurtleAdventureGame(Game):  # pylint: disable=too-many-ancestors
             self.delete_element(enemy)
         self.enemies.clear()
         self.enemy_generator.create_enemy()
+        self.waypoint.deactivate()
         self.start_game()
 
     def game_over_lose(self) -> None:
