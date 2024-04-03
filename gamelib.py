@@ -157,6 +157,12 @@ class Game(tk.Frame, ABC): # pylint: disable=too-many-ancestors
         """
         self.__started = False
 
+    def render(self) -> None:
+        """Renders all element.
+        """
+        for element in self.__game_elements:
+            element.render()
+ 
     def animate(self):
         """
         Update and render all game's elements
