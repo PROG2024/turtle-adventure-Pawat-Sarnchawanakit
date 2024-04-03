@@ -2,6 +2,7 @@
 The gamelib module defines abstract classes necessary for implementing simple
 games based on tkinter's canvas.
 """
+import time
 import tkinter as tk
 from abc import ABC, abstractmethod
 
@@ -60,7 +61,7 @@ class GameElement(ABC):
         """
 
     @abstractmethod
-    def update(self) -> None:
+    def update(self, delta_time: float) -> None:
         """
         Update internal states of this element
         """
@@ -90,6 +91,7 @@ class Game(tk.Frame, ABC): # pylint: disable=too-many-ancestors
         self.__canvas.pack(expand=True, fill="both")
         self.pack(expand=True, fill="both")
         self.__game_elements = []
+        self.__last_update = 0
         self.__update_delay = update_delay
         self.__started = False
         self.init_game()
@@ -145,6 +147,7 @@ class Game(tk.Frame, ABC): # pylint: disable=too-many-ancestors
         Start the game
         """
         if not self.__started:
+            self.__last_update = time.time()
             self.__started = True
             self.animate()
 
@@ -158,8 +161,11 @@ class Game(tk.Frame, ABC): # pylint: disable=too-many-ancestors
         """
         Update and render all game's elements
         """
+        cur_time = time.time()
+        time_delta = cur_time - self.__last_update
         for element in self.__game_elements:
-            element.update()
+            element.update(time_delta)
             element.render()
+        self.__last_update = cur_time
         if self.__started:
             self.after(self.__update_delay, self.animate)
