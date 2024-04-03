@@ -6,8 +6,8 @@ from typing import Final
 import tkinter as tk
 from turtle_adventure import TurtleAdventureGame
 
-SCREEN_WIDTH: Final = 800
-SCREEN_HEIGHT: Final = 500
+SCREEN_WIDTH: Final = 1200
+SCREEN_HEIGHT: Final = 600
 
 if __name__ == "__main__":
     root = tk.Tk()

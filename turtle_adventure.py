@@ -218,7 +218,11 @@ class Enemy(TurtleGameElement):
     Define an abstract enemy for the Turtle's adventure game
     """
 
-    def __init__(self, game: "TurtleAdventureGame", size: int, color: str, speed: float = 100):
+    def __init__(self,
+                 game: "TurtleAdventureGame",
+                 size: int,
+                 color: str,
+                 speed: float = 100):
         super().__init__(game)
         self.__size = size
         self.__color = color
@@ -250,7 +254,8 @@ class Enemy(TurtleGameElement):
         Check whether the enemy is hitting the player
         """
         plr = self.game.player
-        return (self.x-plr.x)**2 + (self.y-plr.y)**2 <= (self.size/2 + 9) ** 2
+        return (self.x - plr.x)**2 + (self.y - plr.y)**2 <= (self.size / 2 +
+                                                             9)**2
 
 
 # TODO
@@ -270,7 +275,8 @@ class RandomWalkEnemy(Enemy):
     __tarx: float
     __tary: float
 
-    def __init__(self, game: "TurtleAdventureGame", size: int, color: str, speed: float):
+    def __init__(self, game: "TurtleAdventureGame", size: int, color: str,
+                 speed: float):
         super().__init__(game, size, color, speed)
         self.x, self.y = randint(0, self.game.screen_width), randint(
             0, self.game.screen_height)
@@ -300,8 +306,8 @@ class RandomWalkEnemy(Enemy):
             self.game.game_over_lose()
 
     def render(self) -> None:
-        self.canvas.coords(self.__sprite, self.x, self.y, self.x + self.size,
-                           self.y + self.size)
+        self.canvas.coords(self.__sprite, self.x - self.size/2, self.y - self.size/2, self.x + self.size/2,
+                           self.y + self.size/2)
 
     def delete(self) -> None:
         self.canvas.delete(self.__sprite)
@@ -314,7 +320,8 @@ class ChasingEnemy(Enemy):
 
     __sprite: int
 
-    def __init__(self, game: "TurtleAdventureGame", size: int, color: str, speed: float):
+    def __init__(self, game: "TurtleAdventureGame", size: int, color: str,
+                 speed: float):
         super().__init__(game, size, color, speed)
         self.x, self.y = randint(0, self.game.screen_width), randint(
             0, self.game.screen_height)
@@ -338,8 +345,8 @@ class ChasingEnemy(Enemy):
             self.game.game_over_lose()
 
     def render(self) -> None:
-        self.canvas.coords(self.__sprite, self.x, self.y, self.x + self.size,
-                           self.y + self.size)
+        self.canvas.coords(self.__sprite, self.x - self.size/2, self.y - self.size/2, self.x + self.size/2,
+                           self.y + self.size/2)
 
     def delete(self) -> None:
         self.canvas.delete(self.__sprite)
@@ -355,7 +362,8 @@ class FencingEnemy(Enemy):
     __dir: bool
     __radius: int
 
-    def __init__(self, game: "TurtleAdventureGame", size: int, color: str, speed: float):
+    def __init__(self, game: "TurtleAdventureGame", size: int, color: str,
+                 speed: float):
         super().__init__(game, size, color, speed)
         self.x, self.y = randint(0, self.game.screen_width), randint(
             0, self.game.screen_height)
@@ -373,8 +381,10 @@ class FencingEnemy(Enemy):
 
     def update(self, delta_time) -> None:
         home = self.game.home
-        dif_x = home.x + self.__radius*(-1, 1, 1, -1)[self.__tar_corner] - self.x
-        dif_y = home.y + self.__radius*(-1, 1)[self.__tar_corner // 2] - self.y
+        dif_x = home.x + self.__radius * (-1, 1, 1,
+                                          -1)[self.__tar_corner] - self.x
+        dif_y = home.y + self.__radius * (-1,
+                                          1)[self.__tar_corner // 2] - self.y
         dist_sq = dif_x**2 + dif_y**2
         if dist_sq < delta_time * self.speed**2:
             self.__tar_corner = (self.__tar_corner + (1, -1)[self.__dir]) % 4
@@ -386,42 +396,114 @@ class FencingEnemy(Enemy):
             self.game.game_over_lose()
 
     def render(self) -> None:
-        self.canvas.coords(self.__sprite, self.x, self.y, self.x + self.size,
-                           self.y + self.size)
+        self.canvas.coords(self.__sprite, self.x - self.size/2, self.y - self.size/2, self.x + self.size/2,
+                           self.y + self.size/2)
 
     def delete(self) -> None:
         self.canvas.delete(self.__sprite)
 
 
-class DemoEnemy(Enemy):
+class ExplodingEnemy(Enemy):
     """
-    Demo enemy
+    Enemy that explodes into 3 enemies.
     """
+    __sprite: int
+    __tarx: float
+    __tary: float
 
-    def __init__(self, game: "TurtleAdventureGame", size: int, color: str):
-        super().__init__(game, size, color)
+    def __init__(self, game: "TurtleAdventureGame", size: int, color: str,
+                 speed: float, tar_x: float, tar_y: float):
+        super().__init__(game, size, color, speed)
+        self.x, self.y = randint(0, self.game.screen_width), randint(
+            0, self.game.screen_height)
+        self.__tarx, self.__tary = tar_x, tar_y
 
     def create(self) -> None:
-        pass
+        self.__sprite = self.canvas.create_oval(self.x,
+                                                self.y,
+                                                self.x + self.size,
+                                                self.y + self.size,
+                                                width=0,
+                                                fill=self.color)
 
     def update(self, delta_time) -> None:
-        pass
+        dif_x = self.__tarx - self.x
+        dif_y = self.__tary - self.y
+        dist_sq = dif_x**2 + dif_y**2
+        if dist_sq < delta_time * self.speed**2:
+            for _ in range(3):
+                enemy_type = choice((RandomWalkEnemy, ChasingEnemy))
+                new_enemy = enemy_type(self.game,
+                                10,
+                                "black",
+                                speed=150 + randint(0, 30))
+                new_enemy.x, new_enemy.y = self.x, self.y
+                self.game.add_enemy(new_enemy)
+            self.game.delete_element(self)
+            self.game.enemies.remove(self)
+            return
+        dist = sqrt(dist_sq)
+        self.x += (dif_x / dist) * delta_time * self.speed
+        self.y += (dif_y / dist) * delta_time * self.speed
+        if self.hits_player():
+            self.game.game_over_lose()
 
     def render(self) -> None:
-        pass
+        self.canvas.coords(self.__sprite, self.x - self.size/2, self.y - self.size/2, self.x + self.size/2,
+                           self.y + self.size/2)
 
     def delete(self) -> None:
-        pass
+        self.canvas.delete(self.__sprite)
 
+class BossEnemy(Enemy):
+    """
+    Boss Enemy
+    """
 
-# TODO
-# Complete the EnemyGenerator class by inserting code to generate enemies
-# based on the given game level; call TurtleAdventureGame's add_enemy() method
-# to add enemies to the game at certain points in time.
-#
-# Hint: the 'game' parameter is a tkinter's frame, so it's after()
-# method can be used to schedule some future events.
+    __sprite: int
+    __last_shot: float
 
+    def __init__(self, game: "TurtleAdventureGame", size: int, color: str,
+                 speed: float):
+        super().__init__(game, size, color, speed)
+        self.x, self.y = randint(0, self.game.screen_width), randint(
+            0, self.game.screen_height)
+
+    def create(self) -> None:
+        self.__sprite = self.canvas.create_oval(self.x,
+                                                self.y,
+                                                self.x + self.size,
+                                                self.y + self.size,
+                                                width=0,
+                                                fill=self.color)
+        self.__last_shot = 0
+
+    def update(self, delta_time) -> None:
+        wp = self.game.waypoint if self.game.waypoint.is_active else self.game.player
+        plr = self.game.player
+        dif_x = wp.x - self.x
+        dif_y = wp.y - self.y
+        dist = sqrt(dif_x**2 + dif_y**2)
+        self.x += (dif_x / dist) * delta_time * self.speed
+        self.y += (dif_y / dist) * delta_time * self.speed
+        if self.__last_shot > 1:
+            new_enemy = ExplodingEnemy(self.game,
+                               12,
+                               "yellow",
+                               300, (wp.x+plr.x)/2, (wp.y+plr.y)/2)
+            new_enemy.x, new_enemy.y = self.x, self.y
+            self.game.add_enemy(new_enemy)
+            self.__last_shot = 0
+        self.__last_shot += delta_time
+        if self.hits_player():
+            self.game.game_over_lose()
+
+    def render(self) -> None:
+        self.canvas.coords(self.__sprite, self.x - self.size/2, self.y - self.size/2, self.x + self.size/2,
+                           self.y + self.size/2)
+
+    def delete(self) -> None:
+        self.canvas.delete(self.__sprite)
 
 class EnemyGenerator:
     """
@@ -467,13 +549,21 @@ class EnemyGenerator:
         """
         Create a new enemy, possibly based on the game level
         """
-        enemies_to_spawn = 3 * self.level
+        level = self.level
+        enemies_to_spawn = min(2 + 2 * self.level, 10)
+        # enemies_to_spawn = 1
         if len(self.game.enemies) >= enemies_to_spawn:
             return
-        delay = int(3000/enemies_to_spawn)
-        enemy_type = choice((RandomWalkEnemy, ChasingEnemy, FencingEnemy))
-        new_enemy = enemy_type(self.__game, choice((15, 20, 30)),
-                               choice(("red", "green", "blue")), speed=150+randint(0, 30))
+        delay = int(3000 / enemies_to_spawn)
+        possible_enemies: tuple = (RandomWalkEnemy,)
+        possible_enemies += ((FencingEnemy, ) if level > 1 else ())
+        possible_enemies += possible_enemies + ((ChasingEnemy, ) if level > 2 else ())
+        possible_enemies += possible_enemies + ((BossEnemy, ) if level > 4 else ())
+        enemy_type = choice(possible_enemies)
+        new_enemy = enemy_type(self.__game,
+                               choice((15, 20, 30)),
+                               choice(("red", "green", "blue")),
+                               speed=140 + randint(0, 30))
         new_enemy.x, new_enemy.y = self.generate_spawnpos()
         self.game.add_enemy(new_enemy)
         self.game.after(delay, self.create_enemy)
